@@ -3,3 +3,4 @@
 %uri=git.github:mboot/sqitch-postgres-elm
 
 appshema 2021-07-18T08:44:42Z mboot,,, <mboot@dbnacer> # Add schema api in to project
+todos [appshema] 2021-07-18T09:47:59Z mboot,,, <mboot@dbnacer> # create tabl todos
