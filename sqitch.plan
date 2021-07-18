@@ -1,0 +1,4 @@
+%syntax-version=1.0.0
+%project=sqitch-postgrest-elm
+%uri=git.github:mboot/sqitch-postgres-elm
+
