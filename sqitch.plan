@@ -2,3 +2,4 @@
 %project=sqitch-postgrest-elm
 %uri=git.github:mboot/sqitch-postgres-elm
 
+appshema 2021-07-18T08:44:42Z mboot,,, <mboot@dbnacer> # Add schema api in to project
