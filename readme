@@ -1,0 +1,95 @@
+sqitch-postgrest-elm app project
+i'm system debian, initial envorement for debian
+
+delete CDROM, add contrib non-free
+
+$cat /etc/apt.sources.list
+
+deb http://deb.debian.org/debian/ buster main non-free contrib
+deb-src http://deb.debian.org/debian/ buster main non-free contrib
+
+deb http://security.debian.org/debian-security buster/updates main contrib non-free
+deb-src http://security.debian.org/debian-security buster/updates main contrib non-free
+
+# buster-updates, previously known as 'volatile'
+deb http://deb.debian.org/debian/ buster-updates main contrib non-free
+deb-src http://deb.debian.org/debian/ buster-updates main contrib non-free
+
+$usermod -aG sudo !USER!
+
+$sudo apt install vim postgrestql libpq-dev sqitch guake tmux screen curl wget git rsync
+$sudo apt install python python python-pip
+
+for paste mouse
+$vi /usr/share/vim/vim81/defaults.vim 
+"mouse=a
+mouse=v
+
+$curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+
+exit terminal session
+
+$nvm install --lts
+
+$npm i -g elm
+$npm i -g elm-format
+$npm i -g elm-live
+
+$curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+
+$ cat ~/.vimrci
+
+" Specify a directory for plugins
+" - For Neovim: stdpath('data') . '/plugged'
+" - Avoid using standard Vim directory names like 'plugin'
+call plug#begin('~/.vim/plugged')
+
+" Using a non-default branch
+Plug 'rdnetto/YCM-Generator', { 'branch': 'stable' }
+
+Plug 'elmcast/elm-vim'
+Plug 'mattn/vim-sqlfmt'
+
+" Initialize plugin system
+call plug#end()
+
+set tabstop=4
+set expandtab
+set softtabstop=4
+set backupcopy=yes
+"set formatexpr=sql
+
+$vi 
+:PlugInstall
+:q
+
+$sudo su postgres
+$psql
+postgres=#CREATE ROLE !user! LOGIN;
+postgres=#ALTER ROLE !user! WiTH SUPERUSER;
+postgres=\du
+postgres=#\password !user! 
+postgres=\q
+
+$exit
+
+$psql -U !user! -h localhost -d postgres -W
+!user!=# CREATE DATABASE !database!
+!user!=#\l
+!user!=#\c !database!
+!user!=#\q
+
+$cat .pgpass 
+localhost:*:!database!:!user!:!password!
+
+$mkdir !project!
+$cd !project!
+$ git init
+$ sqitch init --engine pg --uri "!github URI!"
+$ elm init
+
+
+
+

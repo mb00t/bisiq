@@ -5,7 +5,8 @@
 
 INSERT INTO api.todos(task)
 VALUES ('task3'),
-       ('task4');
+       ('task4'),
+       ('task5');
 
 
 COMMIT;
