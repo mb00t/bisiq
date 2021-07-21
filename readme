@@ -90,6 +90,8 @@ $ git init
 $ sqitch init --engine pg --uri "!github URI!"
 $ elm init
 
-
+$git remote add origin https://github.com/monsterlessons/learning_git.git
+$git remote -v
+$git push -u origin master
 
 
