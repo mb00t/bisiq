@@ -5319,8 +5319,8 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$DecodeSelf$Loading = {$: 'Loading'};
-var $author$project$DecodeSelf$GotTodos = function (a) {
+var $author$project$DecodeSelfTrue$Loading = {$: 'Loading'};
+var $author$project$DecodeSelfTrue$GotTodos = function (a) {
 	return {$: 'GotTodos', a: a};
 };
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
@@ -6111,7 +6111,7 @@ var $elm$http$Http$get = function (r) {
 		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
 var $elm$json$Json$Decode$list = _Json_decodeList;
-var $author$project$DecodeSelf$Todos = F3(
+var $author$project$DecodeSelfTrue$Todos = F3(
 	function (id, done, task) {
 		return {done: done, id: id, task: task};
 	});
@@ -6127,7 +6127,7 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 			decoder);
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$DecodeSelf$todosDecoder = A3(
+var $author$project$DecodeSelfTrue$todosDecoder = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 	'task',
 	$elm$json$Json$Decode$string,
@@ -6139,42 +6139,42 @@ var $author$project$DecodeSelf$todosDecoder = A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 			'id',
 			$elm$json$Json$Decode$int,
-			$elm$json$Json$Decode$succeed($author$project$DecodeSelf$Todos))));
-var $author$project$DecodeSelf$getTodos = $elm$http$Http$get(
+			$elm$json$Json$Decode$succeed($author$project$DecodeSelfTrue$Todos))));
+var $author$project$DecodeSelfTrue$getTodos = $elm$http$Http$get(
 	{
 		expect: A2(
 			$elm$http$Http$expectJson,
-			$author$project$DecodeSelf$GotTodos,
-			$elm$json$Json$Decode$list($author$project$DecodeSelf$todosDecoder)),
+			$author$project$DecodeSelfTrue$GotTodos,
+			$elm$json$Json$Decode$list($author$project$DecodeSelfTrue$todosDecoder)),
 		url: 'http://localhost:3000/todos'
 	});
-var $author$project$DecodeSelf$init = function (_v0) {
-	return _Utils_Tuple2($author$project$DecodeSelf$Loading, $author$project$DecodeSelf$getTodos);
+var $author$project$DecodeSelfTrue$init = function (_v0) {
+	return _Utils_Tuple2($author$project$DecodeSelfTrue$Loading, $author$project$DecodeSelfTrue$getTodos);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$DecodeSelf$subscriptions = function (model) {
+var $author$project$DecodeSelfTrue$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$none;
 };
-var $author$project$DecodeSelf$Failure = {$: 'Failure'};
-var $author$project$DecodeSelf$Success = function (a) {
+var $author$project$DecodeSelfTrue$Failure = {$: 'Failure'};
+var $author$project$DecodeSelfTrue$Success = function (a) {
 	return {$: 'Success', a: a};
 };
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$DecodeSelf$update = F2(
+var $author$project$DecodeSelfTrue$update = F2(
 	function (msg, model) {
 		if (msg.$ === 'NextPleace') {
-			return _Utils_Tuple2($author$project$DecodeSelf$Loading, $author$project$DecodeSelf$getTodos);
+			return _Utils_Tuple2($author$project$DecodeSelfTrue$Loading, $author$project$DecodeSelfTrue$getTodos);
 		} else {
 			var result = msg.a;
 			if (result.$ === 'Ok') {
 				var url = result.a;
 				return _Utils_Tuple2(
-					$author$project$DecodeSelf$Success(url),
+					$author$project$DecodeSelfTrue$Success(url),
 					$elm$core$Platform$Cmd$none);
 			} else {
-				return _Utils_Tuple2($author$project$DecodeSelf$Failure, $elm$core$Platform$Cmd$none);
+				return _Utils_Tuple2($author$project$DecodeSelfTrue$Failure, $elm$core$Platform$Cmd$none);
 			}
 		}
 	});
@@ -6182,7 +6182,7 @@ var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$DecodeSelf$NextPleace = {$: 'NextPleace'};
+var $author$project$DecodeSelfTrue$NextPleace = {$: 'NextPleace'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
@@ -6205,7 +6205,7 @@ var $elm$html$Html$h3 = _VirtualDom_node('h3');
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$DecodeSelf$viewTableHeader = A2(
+var $author$project$DecodeSelfTrue$viewTableHeader = A2(
 	$elm$html$Html$tr,
 	_List_Nil,
 	_List_fromArray(
@@ -6226,7 +6226,7 @@ var $author$project$DecodeSelf$viewTableHeader = A2(
 				]))
 		]));
 var $elm$html$Html$td = _VirtualDom_node('td');
-var $author$project$DecodeSelf$viewTodo = function (todos) {
+var $author$project$DecodeSelfTrue$viewTodo = function (todos) {
 	return A2(
 		$elm$html$Html$tr,
 		_List_Nil,
@@ -6249,7 +6249,7 @@ var $author$project$DecodeSelf$viewTodo = function (todos) {
 					]))
 			]));
 };
-var $author$project$DecodeSelf$viewTodos = function (todos) {
+var $author$project$DecodeSelfTrue$viewTodos = function (todos) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
@@ -6267,11 +6267,11 @@ var $author$project$DecodeSelf$viewTodos = function (todos) {
 				_List_Nil,
 				_Utils_ap(
 					_List_fromArray(
-						[$author$project$DecodeSelf$viewTableHeader]),
-					A2($elm$core$List$map, $author$project$DecodeSelf$viewTodo, todos)))
+						[$author$project$DecodeSelfTrue$viewTableHeader]),
+					A2($elm$core$List$map, $author$project$DecodeSelfTrue$viewTodo, todos)))
 			]));
 };
-var $author$project$DecodeSelf$viewModel = function (model) {
+var $author$project$DecodeSelfTrue$viewModel = function (model) {
 	switch (model.$) {
 		case 'Failure':
 			return A2(
@@ -6284,7 +6284,7 @@ var $author$project$DecodeSelf$viewModel = function (model) {
 						$elm$html$Html$button,
 						_List_fromArray(
 							[
-								$elm$html$Html$Events$onClick($author$project$DecodeSelf$NextPleace)
+								$elm$html$Html$Events$onClick($author$project$DecodeSelfTrue$NextPleace)
 							]),
 						_List_fromArray(
 							[
@@ -6304,7 +6304,7 @@ var $author$project$DecodeSelf$viewModel = function (model) {
 						$elm$html$Html$button,
 						_List_fromArray(
 							[
-								$elm$html$Html$Events$onClick($author$project$DecodeSelf$NextPleace)
+								$elm$html$Html$Events$onClick($author$project$DecodeSelfTrue$NextPleace)
 							]),
 						_List_fromArray(
 							[
@@ -6317,11 +6317,11 @@ var $author$project$DecodeSelf$viewModel = function (model) {
 							[
 								$elm$html$Html$text('json here ....')
 							])),
-						$author$project$DecodeSelf$viewTodos(dataUrl)
+						$author$project$DecodeSelfTrue$viewTodos(dataUrl)
 					]));
 	}
 };
-var $author$project$DecodeSelf$view = function (model) {
+var $author$project$DecodeSelfTrue$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
@@ -6334,12 +6334,12 @@ var $author$project$DecodeSelf$view = function (model) {
 					[
 						$elm$html$Html$text('get todos')
 					])),
-				$author$project$DecodeSelf$viewModel(model)
+				$author$project$DecodeSelfTrue$viewModel(model)
 			]));
 };
-var $author$project$DecodeSelf$main = $elm$browser$Browser$element(
-	{init: $author$project$DecodeSelf$init, subscriptions: $author$project$DecodeSelf$subscriptions, update: $author$project$DecodeSelf$update, view: $author$project$DecodeSelf$view});
-_Platform_export({'DecodeSelf':{'init':$author$project$DecodeSelf$main(
+var $author$project$DecodeSelfTrue$main = $elm$browser$Browser$element(
+	{init: $author$project$DecodeSelfTrue$init, subscriptions: $author$project$DecodeSelfTrue$subscriptions, update: $author$project$DecodeSelfTrue$update, view: $author$project$DecodeSelfTrue$view});
+_Platform_export({'DecodeSelfTrue':{'init':$author$project$DecodeSelfTrue$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});
 
 //////////////////// HMR BEGIN ////////////////////

@@ -1,10 +1,11 @@
 module Main exposing (Msg(..), main, update, view)
 
+--import PostgRest as Rest exposing (Attribute, Request, Selection)
+
 import Browser
 import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
 import Json.Decode as Json exposing (Decoder)
-import PostgRest as Rest exposing (Attribute, Request, Selection)
 import Schema
 
 

@@ -1,6 +1,5 @@
-module DecodeSelf exposing (main)
+module DecodeSelfTrue exposing (main)
 
-import ApiTodos exposing (..)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (class)
@@ -8,6 +7,8 @@ import Html.Events exposing (onClick)
 import Http
 import Json.Decode exposing (Decoder, bool, field, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
+import PostgRest as Rest exposing (Attribute, Request, Selection)
+import Schema exposing (..)
 
 
 
@@ -31,6 +32,13 @@ type Model
     = Failure
     | Loading
     | Success (List Todos)
+
+
+type alias Todos =
+    { id : Int
+    , done : Bool
+    , task : String
+    }
 
 
 init : () -> ( Model, Cmd Msg )
@@ -136,17 +144,18 @@ viewTodo todos =
 -- HTTP
 
 
-tgetTodos =
-    getMany
-        [ P.order [ P.ask "name" ]
-        , P.limit 10
-        ]
-        |> toCmd
-
-
-ogetTodos : Cmd Msg
-ogetTodos =
+getTodos : Cmd Msg
+getTodos =
     Http.get
         { url = "http://localhost:3000/todos"
-        , expect = Http.expectJson GotTodos (list decodeUnit)
+        , expect = Http.expectJson GotTodos (list todosDecoder)
         }
+
+
+todosDecoder : Decoder Todos
+todosDecoder =
+    --  field "id" (field "id" string)
+    succeed Todos
+        |> required "id" int
+        |> required "done" bool
+        |> required "task" string
