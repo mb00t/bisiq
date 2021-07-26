@@ -8,3 +8,4 @@ roles_grant [appshema] 2021-07-18T12:09:11Z mboot,,, <mboot@dbnacer> # grant rol
 roles_authenticator [appshema] 2021-07-18T12:36:41Z mboot,,, <mboot@dbnacer> # grant role authenticator
 todos_data_paste [appshema] 2021-07-19T08:59:31Z mboot,,, <mboot@dbnacer> # insert data ti todos
 users [appshema] 2021-07-20T20:49:17Z mboot,,, <mboot@dbnacer> # add table users? web_anon grant, authenticate grant
+astercdr [appshema] 2021-07-24T18:27:25Z mboot,,, <mboot@dbnacer> # add sterisk cdr table
