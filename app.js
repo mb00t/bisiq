@@ -4358,6 +4358,136 @@ function _Browser_load(url)
 
 
 
+
+// STRINGS
+
+
+var _Parser_isSubString = F5(function(smallString, offset, row, col, bigString)
+{
+	var smallLength = smallString.length;
+	var isGood = offset + smallLength <= bigString.length;
+
+	for (var i = 0; isGood && i < smallLength; )
+	{
+		var code = bigString.charCodeAt(offset);
+		isGood =
+			smallString[i++] === bigString[offset++]
+			&& (
+				code === 0x000A /* \n */
+					? ( row++, col=1 )
+					: ( col++, (code & 0xF800) === 0xD800 ? smallString[i++] === bigString[offset++] : 1 )
+			)
+	}
+
+	return _Utils_Tuple3(isGood ? offset : -1, row, col);
+});
+
+
+
+// CHARS
+
+
+var _Parser_isSubChar = F3(function(predicate, offset, string)
+{
+	return (
+		string.length <= offset
+			? -1
+			:
+		(string.charCodeAt(offset) & 0xF800) === 0xD800
+			? (predicate(_Utils_chr(string.substr(offset, 2))) ? offset + 2 : -1)
+			:
+		(predicate(_Utils_chr(string[offset]))
+			? ((string[offset] === '\n') ? -2 : (offset + 1))
+			: -1
+		)
+	);
+});
+
+
+var _Parser_isAsciiCode = F3(function(code, offset, string)
+{
+	return string.charCodeAt(offset) === code;
+});
+
+
+
+// NUMBERS
+
+
+var _Parser_chompBase10 = F2(function(offset, string)
+{
+	for (; offset < string.length; offset++)
+	{
+		var code = string.charCodeAt(offset);
+		if (code < 0x30 || 0x39 < code)
+		{
+			return offset;
+		}
+	}
+	return offset;
+});
+
+
+var _Parser_consumeBase = F3(function(base, offset, string)
+{
+	for (var total = 0; offset < string.length; offset++)
+	{
+		var digit = string.charCodeAt(offset) - 0x30;
+		if (digit < 0 || base <= digit) break;
+		total = base * total + digit;
+	}
+	return _Utils_Tuple2(offset, total);
+});
+
+
+var _Parser_consumeBase16 = F2(function(offset, string)
+{
+	for (var total = 0; offset < string.length; offset++)
+	{
+		var code = string.charCodeAt(offset);
+		if (0x30 <= code && code <= 0x39)
+		{
+			total = 16 * total + code - 0x30;
+		}
+		else if (0x41 <= code && code <= 0x46)
+		{
+			total = 16 * total + code - 55;
+		}
+		else if (0x61 <= code && code <= 0x66)
+		{
+			total = 16 * total + code - 87;
+		}
+		else
+		{
+			break;
+		}
+	}
+	return _Utils_Tuple2(offset, total);
+});
+
+
+
+// FIND STRING
+
+
+var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString)
+{
+	var newOffset = bigString.indexOf(smallString, offset);
+	var target = newOffset < 0 ? bigString.length : newOffset + smallString.length;
+
+	while (offset < target)
+	{
+		var code = bigString.charCodeAt(offset++);
+		code === 0x000A /* \n */
+			? ( col=1, row++ )
+			: ( col++, (code & 0xF800) === 0xD800 && offset++ )
+	}
+
+	return _Utils_Tuple3(newOffset, row, col);
+});
+
+
+
 // SEND REQUEST
 
 var _Http_toTask = F3(function(router, toTask, request)
@@ -4530,7 +4660,44 @@ function _Http_track(router, xhr, tracker)
 			size: event.lengthComputable ? $elm$core$Maybe$Just(event.total) : $elm$core$Maybe$Nothing
 		}))));
 	});
-}var $elm$core$Basics$EQ = {$: 'EQ'};
+}
+
+
+var _Bitwise_and = F2(function(a, b)
+{
+	return a & b;
+});
+
+var _Bitwise_or = F2(function(a, b)
+{
+	return a | b;
+});
+
+var _Bitwise_xor = F2(function(a, b)
+{
+	return a ^ b;
+});
+
+function _Bitwise_complement(a)
+{
+	return ~a;
+};
+
+var _Bitwise_shiftLeftBy = F2(function(offset, a)
+{
+	return a << offset;
+});
+
+var _Bitwise_shiftRightBy = F2(function(offset, a)
+{
+	return a >> offset;
+});
+
+var _Bitwise_shiftRightZfBy = F2(function(offset, a)
+{
+	return a >>> offset;
+});
+var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
@@ -5319,10 +5486,808 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$DecodeSelfTrue$Loading = {$: 'Loading'};
-var $author$project$DecodeSelfTrue$GotTodos = function (a) {
-	return {$: 'GotTodos', a: a};
+var $author$project$DecodeAster$Loading = {$: 'Loading'};
+var $author$project$DecodeAster$GotAsters = function (a) {
+	return {$: 'GotAsters', a: a};
 };
+var $author$project$DecodeAster$Asters = F5(
+	function (src, dcontext, billsec, disposition, calldate) {
+		return {billsec: billsec, calldate: calldate, dcontext: dcontext, disposition: disposition, src: src};
+	});
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $elm$parser$Parser$Advanced$Bad = F2(
+	function (a, b) {
+		return {$: 'Bad', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$Good = F3(
+	function (a, b, c) {
+		return {$: 'Good', a: a, b: b, c: c};
+	});
+var $elm$parser$Parser$Advanced$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
+var $elm$parser$Parser$Advanced$andThen = F2(
+	function (callback, _v0) {
+		var parseA = _v0.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v1 = parseA(s0);
+				if (_v1.$ === 'Bad') {
+					var p = _v1.a;
+					var x = _v1.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p1 = _v1.a;
+					var a = _v1.b;
+					var s1 = _v1.c;
+					var _v2 = callback(a);
+					var parseB = _v2.a;
+					var _v3 = parseB(s1);
+					if (_v3.$ === 'Bad') {
+						var p2 = _v3.a;
+						var x = _v3.b;
+						return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+					} else {
+						var p2 = _v3.a;
+						var b = _v3.b;
+						var s2 = _v3.c;
+						return A3($elm$parser$Parser$Advanced$Good, p1 || p2, b, s2);
+					}
+				}
+			});
+	});
+var $elm$parser$Parser$andThen = $elm$parser$Parser$Advanced$andThen;
+var $elm$parser$Parser$ExpectingEnd = {$: 'ExpectingEnd'};
+var $elm$parser$Parser$Advanced$AddRight = F2(
+	function (a, b) {
+		return {$: 'AddRight', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$DeadEnd = F4(
+	function (row, col, problem, contextStack) {
+		return {col: col, contextStack: contextStack, problem: problem, row: row};
+	});
+var $elm$parser$Parser$Advanced$Empty = {$: 'Empty'};
+var $elm$parser$Parser$Advanced$fromState = F2(
+	function (s, x) {
+		return A2(
+			$elm$parser$Parser$Advanced$AddRight,
+			$elm$parser$Parser$Advanced$Empty,
+			A4($elm$parser$Parser$Advanced$DeadEnd, s.row, s.col, x, s.context));
+	});
+var $elm$parser$Parser$Advanced$end = function (x) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return _Utils_eq(
+				$elm$core$String$length(s.src),
+				s.offset) ? A3($elm$parser$Parser$Advanced$Good, false, _Utils_Tuple0, s) : A2(
+				$elm$parser$Parser$Advanced$Bad,
+				false,
+				A2($elm$parser$Parser$Advanced$fromState, s, x));
+		});
+};
+var $elm$parser$Parser$end = $elm$parser$Parser$Advanced$end($elm$parser$Parser$ExpectingEnd);
+var $elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$parser$Parser$Advanced$chompWhileHelp = F5(
+	function (isGood, offset, row, col, s0) {
+		chompWhileHelp:
+		while (true) {
+			var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, offset, s0.src);
+			if (_Utils_eq(newOffset, -1)) {
+				return A3(
+					$elm$parser$Parser$Advanced$Good,
+					_Utils_cmp(s0.offset, offset) < 0,
+					_Utils_Tuple0,
+					{col: col, context: s0.context, indent: s0.indent, offset: offset, row: row, src: s0.src});
+			} else {
+				if (_Utils_eq(newOffset, -2)) {
+					var $temp$isGood = isGood,
+						$temp$offset = offset + 1,
+						$temp$row = row + 1,
+						$temp$col = 1,
+						$temp$s0 = s0;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					s0 = $temp$s0;
+					continue chompWhileHelp;
+				} else {
+					var $temp$isGood = isGood,
+						$temp$offset = newOffset,
+						$temp$row = row,
+						$temp$col = col + 1,
+						$temp$s0 = s0;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					s0 = $temp$s0;
+					continue chompWhileHelp;
+				}
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$chompWhile = function (isGood) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A5($elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.offset, s.row, s.col, s);
+		});
+};
+var $elm$parser$Parser$chompWhile = $elm$parser$Parser$Advanced$chompWhile;
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
+var $elm$parser$Parser$Advanced$mapChompedString = F2(
+	function (func, _v0) {
+		var parse = _v0.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v1 = parse(s0);
+				if (_v1.$ === 'Bad') {
+					var p = _v1.a;
+					var x = _v1.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p = _v1.a;
+					var a = _v1.b;
+					var s1 = _v1.c;
+					return A3(
+						$elm$parser$Parser$Advanced$Good,
+						p,
+						A2(
+							func,
+							A3($elm$core$String$slice, s0.offset, s1.offset, s0.src),
+							a),
+						s1);
+				}
+			});
+	});
+var $elm$parser$Parser$Advanced$getChompedString = function (parser) {
+	return A2($elm$parser$Parser$Advanced$mapChompedString, $elm$core$Basics$always, parser);
+};
+var $elm$parser$Parser$getChompedString = $elm$parser$Parser$Advanced$getChompedString;
+var $elm$parser$Parser$Problem = function (a) {
+	return {$: 'Problem', a: a};
+};
+var $elm$parser$Parser$Advanced$problem = function (x) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A2(
+				$elm$parser$Parser$Advanced$Bad,
+				false,
+				A2($elm$parser$Parser$Advanced$fromState, s, x));
+		});
+};
+var $elm$parser$Parser$problem = function (msg) {
+	return $elm$parser$Parser$Advanced$problem(
+		$elm$parser$Parser$Problem(msg));
+};
+var $elm$core$Basics$round = _Basics_round;
+var $elm$parser$Parser$Advanced$succeed = function (a) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3($elm$parser$Parser$Advanced$Good, false, a, s);
+		});
+};
+var $elm$parser$Parser$succeed = $elm$parser$Parser$Advanced$succeed;
+var $elm$core$String$toFloat = _String_toFloat;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$fractionsOfASecondInMs = A2(
+	$elm$parser$Parser$andThen,
+	function (str) {
+		if ($elm$core$String$length(str) <= 9) {
+			var _v0 = $elm$core$String$toFloat('0.' + str);
+			if (_v0.$ === 'Just') {
+				var floatVal = _v0.a;
+				return $elm$parser$Parser$succeed(
+					$elm$core$Basics$round(floatVal * 1000));
+			} else {
+				return $elm$parser$Parser$problem('Invalid float: \"' + (str + '\"'));
+			}
+		} else {
+			return $elm$parser$Parser$problem(
+				'Expected at most 9 digits, but got ' + $elm$core$String$fromInt(
+					$elm$core$String$length(str)));
+		}
+	},
+	$elm$parser$Parser$getChompedString(
+		$elm$parser$Parser$chompWhile($elm$core$Char$isDigit)));
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts = F6(
+	function (monthYearDayMs, hour, minute, second, ms, utcOffsetMinutes) {
+		return $elm$time$Time$millisToPosix((((monthYearDayMs + (((hour * 60) * 60) * 1000)) + (((minute - utcOffsetMinutes) * 60) * 1000)) + (second * 1000)) + ms);
+	});
+var $elm$parser$Parser$Advanced$map2 = F3(
+	function (func, _v0, _v1) {
+		var parseA = _v0.a;
+		var parseB = _v1.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v2 = parseA(s0);
+				if (_v2.$ === 'Bad') {
+					var p = _v2.a;
+					var x = _v2.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p1 = _v2.a;
+					var a = _v2.b;
+					var s1 = _v2.c;
+					var _v3 = parseB(s1);
+					if (_v3.$ === 'Bad') {
+						var p2 = _v3.a;
+						var x = _v3.b;
+						return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+					} else {
+						var p2 = _v3.a;
+						var b = _v3.b;
+						var s2 = _v3.c;
+						return A3(
+							$elm$parser$Parser$Advanced$Good,
+							p1 || p2,
+							A2(func, a, b),
+							s2);
+					}
+				}
+			});
+	});
+var $elm$parser$Parser$Advanced$ignorer = F2(
+	function (keepParser, ignoreParser) {
+		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$always, keepParser, ignoreParser);
+	});
+var $elm$parser$Parser$ignorer = $elm$parser$Parser$Advanced$ignorer;
+var $elm$parser$Parser$Advanced$keeper = F2(
+	function (parseFunc, parseArg) {
+		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$apL, parseFunc, parseArg);
+	});
+var $elm$parser$Parser$keeper = $elm$parser$Parser$Advanced$keeper;
+var $elm$parser$Parser$Advanced$Append = F2(
+	function (a, b) {
+		return {$: 'Append', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$oneOfHelp = F3(
+	function (s0, bag, parsers) {
+		oneOfHelp:
+		while (true) {
+			if (!parsers.b) {
+				return A2($elm$parser$Parser$Advanced$Bad, false, bag);
+			} else {
+				var parse = parsers.a.a;
+				var remainingParsers = parsers.b;
+				var _v1 = parse(s0);
+				if (_v1.$ === 'Good') {
+					var step = _v1;
+					return step;
+				} else {
+					var step = _v1;
+					var p = step.a;
+					var x = step.b;
+					if (p) {
+						return step;
+					} else {
+						var $temp$s0 = s0,
+							$temp$bag = A2($elm$parser$Parser$Advanced$Append, bag, x),
+							$temp$parsers = remainingParsers;
+						s0 = $temp$s0;
+						bag = $temp$bag;
+						parsers = $temp$parsers;
+						continue oneOfHelp;
+					}
+				}
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$oneOf = function (parsers) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3($elm$parser$Parser$Advanced$oneOfHelp, s, $elm$parser$Parser$Advanced$Empty, parsers);
+		});
+};
+var $elm$parser$Parser$oneOf = $elm$parser$Parser$Advanced$oneOf;
+var $elm$parser$Parser$Done = function (a) {
+	return {$: 'Done', a: a};
+};
+var $elm$parser$Parser$Loop = function (a) {
+	return {$: 'Loop', a: a};
+};
+var $elm$core$String$append = _String_append;
+var $elm$parser$Parser$UnexpectedChar = {$: 'UnexpectedChar'};
+var $elm$parser$Parser$Advanced$chompIf = F2(
+	function (isGood, expecting) {
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s) {
+				var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, s.offset, s.src);
+				return _Utils_eq(newOffset, -1) ? A2(
+					$elm$parser$Parser$Advanced$Bad,
+					false,
+					A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : (_Utils_eq(newOffset, -2) ? A3(
+					$elm$parser$Parser$Advanced$Good,
+					true,
+					_Utils_Tuple0,
+					{col: 1, context: s.context, indent: s.indent, offset: s.offset + 1, row: s.row + 1, src: s.src}) : A3(
+					$elm$parser$Parser$Advanced$Good,
+					true,
+					_Utils_Tuple0,
+					{col: s.col + 1, context: s.context, indent: s.indent, offset: newOffset, row: s.row, src: s.src}));
+			});
+	});
+var $elm$parser$Parser$chompIf = function (isGood) {
+	return A2($elm$parser$Parser$Advanced$chompIf, isGood, $elm$parser$Parser$UnexpectedChar);
+};
+var $elm$parser$Parser$Advanced$loopHelp = F4(
+	function (p, state, callback, s0) {
+		loopHelp:
+		while (true) {
+			var _v0 = callback(state);
+			var parse = _v0.a;
+			var _v1 = parse(s0);
+			if (_v1.$ === 'Good') {
+				var p1 = _v1.a;
+				var step = _v1.b;
+				var s1 = _v1.c;
+				if (step.$ === 'Loop') {
+					var newState = step.a;
+					var $temp$p = p || p1,
+						$temp$state = newState,
+						$temp$callback = callback,
+						$temp$s0 = s1;
+					p = $temp$p;
+					state = $temp$state;
+					callback = $temp$callback;
+					s0 = $temp$s0;
+					continue loopHelp;
+				} else {
+					var result = step.a;
+					return A3($elm$parser$Parser$Advanced$Good, p || p1, result, s1);
+				}
+			} else {
+				var p1 = _v1.a;
+				var x = _v1.b;
+				return A2($elm$parser$Parser$Advanced$Bad, p || p1, x);
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$loop = F2(
+	function (state, callback) {
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s) {
+				return A4($elm$parser$Parser$Advanced$loopHelp, false, state, callback, s);
+			});
+	});
+var $elm$parser$Parser$Advanced$map = F2(
+	function (func, _v0) {
+		var parse = _v0.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v1 = parse(s0);
+				if (_v1.$ === 'Good') {
+					var p = _v1.a;
+					var a = _v1.b;
+					var s1 = _v1.c;
+					return A3(
+						$elm$parser$Parser$Advanced$Good,
+						p,
+						func(a),
+						s1);
+				} else {
+					var p = _v1.a;
+					var x = _v1.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				}
+			});
+	});
+var $elm$parser$Parser$map = $elm$parser$Parser$Advanced$map;
+var $elm$parser$Parser$Advanced$Done = function (a) {
+	return {$: 'Done', a: a};
+};
+var $elm$parser$Parser$Advanced$Loop = function (a) {
+	return {$: 'Loop', a: a};
+};
+var $elm$parser$Parser$toAdvancedStep = function (step) {
+	if (step.$ === 'Loop') {
+		var s = step.a;
+		return $elm$parser$Parser$Advanced$Loop(s);
+	} else {
+		var a = step.a;
+		return $elm$parser$Parser$Advanced$Done(a);
+	}
+};
+var $elm$parser$Parser$loop = F2(
+	function (state, callback) {
+		return A2(
+			$elm$parser$Parser$Advanced$loop,
+			state,
+			function (s) {
+				return A2(
+					$elm$parser$Parser$map,
+					$elm$parser$Parser$toAdvancedStep,
+					callback(s));
+			});
+	});
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt = function (quantity) {
+	var helper = function (str) {
+		if (_Utils_eq(
+			$elm$core$String$length(str),
+			quantity)) {
+			var _v0 = $elm$core$String$toInt(str);
+			if (_v0.$ === 'Just') {
+				var intVal = _v0.a;
+				return A2(
+					$elm$parser$Parser$map,
+					$elm$parser$Parser$Done,
+					$elm$parser$Parser$succeed(intVal));
+			} else {
+				return $elm$parser$Parser$problem('Invalid integer: \"' + (str + '\"'));
+			}
+		} else {
+			return A2(
+				$elm$parser$Parser$map,
+				function (nextChar) {
+					return $elm$parser$Parser$Loop(
+						A2($elm$core$String$append, str, nextChar));
+				},
+				$elm$parser$Parser$getChompedString(
+					$elm$parser$Parser$chompIf($elm$core$Char$isDigit)));
+		}
+	};
+	return A2($elm$parser$Parser$loop, '', helper);
+};
+var $elm$parser$Parser$ExpectingSymbol = function (a) {
+	return {$: 'ExpectingSymbol', a: a};
+};
+var $elm$parser$Parser$Advanced$Token = F2(
+	function (a, b) {
+		return {$: 'Token', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
+var $elm$core$Basics$not = _Basics_not;
+var $elm$parser$Parser$Advanced$token = function (_v0) {
+	var str = _v0.a;
+	var expecting = _v0.b;
+	var progress = !$elm$core$String$isEmpty(str);
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var _v1 = A5($elm$parser$Parser$Advanced$isSubString, str, s.offset, s.row, s.col, s.src);
+			var newOffset = _v1.a;
+			var newRow = _v1.b;
+			var newCol = _v1.c;
+			return _Utils_eq(newOffset, -1) ? A2(
+				$elm$parser$Parser$Advanced$Bad,
+				false,
+				A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
+				$elm$parser$Parser$Advanced$Good,
+				progress,
+				_Utils_Tuple0,
+				{col: newCol, context: s.context, indent: s.indent, offset: newOffset, row: newRow, src: s.src});
+		});
+};
+var $elm$parser$Parser$Advanced$symbol = $elm$parser$Parser$Advanced$token;
+var $elm$parser$Parser$symbol = function (str) {
+	return $elm$parser$Parser$Advanced$symbol(
+		A2(
+			$elm$parser$Parser$Advanced$Token,
+			str,
+			$elm$parser$Parser$ExpectingSymbol(str)));
+};
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$epochYear = 1970;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay = function (day) {
+	return $elm$parser$Parser$problem(
+		'Invalid day: ' + $elm$core$String$fromInt(day));
+};
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$isLeapYear = function (year) {
+	return (!A2($elm$core$Basics$modBy, 4, year)) && ((!(!A2($elm$core$Basics$modBy, 100, year))) || (!A2($elm$core$Basics$modBy, 400, year)));
+};
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$leapYearsBefore = function (y1) {
+	var y = y1 - 1;
+	return (((y / 4) | 0) - ((y / 100) | 0)) + ((y / 400) | 0);
+};
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerDay = 86400000;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerYear = 31536000000;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$yearMonthDay = function (_v0) {
+	var year = _v0.a;
+	var month = _v0.b;
+	var dayInMonth = _v0.c;
+	if (dayInMonth < 0) {
+		return $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth);
+	} else {
+		var succeedWith = function (extraMs) {
+			var yearMs = $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerYear * (year - $rtfeldman$elm_iso8601_date_strings$Iso8601$epochYear);
+			var days = ((month < 3) || (!$rtfeldman$elm_iso8601_date_strings$Iso8601$isLeapYear(year))) ? (dayInMonth - 1) : dayInMonth;
+			var dayMs = $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerDay * (days + ($rtfeldman$elm_iso8601_date_strings$Iso8601$leapYearsBefore(year) - $rtfeldman$elm_iso8601_date_strings$Iso8601$leapYearsBefore($rtfeldman$elm_iso8601_date_strings$Iso8601$epochYear)));
+			return $elm$parser$Parser$succeed((extraMs + yearMs) + dayMs);
+		};
+		switch (month) {
+			case 1:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(0);
+			case 2:
+				return ((dayInMonth > 29) || ((dayInMonth === 29) && (!$rtfeldman$elm_iso8601_date_strings$Iso8601$isLeapYear(year)))) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(2678400000);
+			case 3:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(5097600000);
+			case 4:
+				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(7776000000);
+			case 5:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(10368000000);
+			case 6:
+				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(13046400000);
+			case 7:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(15638400000);
+			case 8:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(18316800000);
+			case 9:
+				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(20995200000);
+			case 10:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(23587200000);
+			case 11:
+				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(26265600000);
+			case 12:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(28857600000);
+			default:
+				return $elm$parser$Parser$problem(
+					'Invalid month: \"' + ($elm$core$String$fromInt(month) + '\"'));
+		}
+	}
+};
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$monthYearDayInMs = A2(
+	$elm$parser$Parser$andThen,
+	$rtfeldman$elm_iso8601_date_strings$Iso8601$yearMonthDay,
+	A2(
+		$elm$parser$Parser$keeper,
+		A2(
+			$elm$parser$Parser$keeper,
+			A2(
+				$elm$parser$Parser$keeper,
+				$elm$parser$Parser$succeed(
+					F3(
+						function (year, month, day) {
+							return _Utils_Tuple3(year, month, day);
+						})),
+				$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(4)),
+			$elm$parser$Parser$oneOf(
+				_List_fromArray(
+					[
+						A2(
+						$elm$parser$Parser$keeper,
+						A2(
+							$elm$parser$Parser$ignorer,
+							$elm$parser$Parser$succeed($elm$core$Basics$identity),
+							$elm$parser$Parser$symbol('-')),
+						$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+						$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)
+					]))),
+		$elm$parser$Parser$oneOf(
+			_List_fromArray(
+				[
+					A2(
+					$elm$parser$Parser$keeper,
+					A2(
+						$elm$parser$Parser$ignorer,
+						$elm$parser$Parser$succeed($elm$core$Basics$identity),
+						$elm$parser$Parser$symbol('-')),
+					$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+					$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)
+				]))));
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$utcOffsetInMinutes = function () {
+	var utcOffsetMinutesFromParts = F3(
+		function (multiplier, hours, minutes) {
+			return (multiplier * (hours * 60)) + minutes;
+		});
+	return A2(
+		$elm$parser$Parser$keeper,
+		$elm$parser$Parser$succeed($elm$core$Basics$identity),
+		$elm$parser$Parser$oneOf(
+			_List_fromArray(
+				[
+					A2(
+					$elm$parser$Parser$map,
+					function (_v0) {
+						return 0;
+					},
+					$elm$parser$Parser$symbol('Z')),
+					A2(
+					$elm$parser$Parser$keeper,
+					A2(
+						$elm$parser$Parser$keeper,
+						A2(
+							$elm$parser$Parser$keeper,
+							$elm$parser$Parser$succeed(utcOffsetMinutesFromParts),
+							$elm$parser$Parser$oneOf(
+								_List_fromArray(
+									[
+										A2(
+										$elm$parser$Parser$map,
+										function (_v1) {
+											return 1;
+										},
+										$elm$parser$Parser$symbol('+')),
+										A2(
+										$elm$parser$Parser$map,
+										function (_v2) {
+											return -1;
+										},
+										$elm$parser$Parser$symbol('-'))
+									]))),
+						$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+					$elm$parser$Parser$oneOf(
+						_List_fromArray(
+							[
+								A2(
+								$elm$parser$Parser$keeper,
+								A2(
+									$elm$parser$Parser$ignorer,
+									$elm$parser$Parser$succeed($elm$core$Basics$identity),
+									$elm$parser$Parser$symbol(':')),
+								$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+								$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2),
+								$elm$parser$Parser$succeed(0)
+							]))),
+					A2(
+					$elm$parser$Parser$ignorer,
+					$elm$parser$Parser$succeed(0),
+					$elm$parser$Parser$end)
+				])));
+}();
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$iso8601 = A2(
+	$elm$parser$Parser$andThen,
+	function (datePart) {
+		return $elm$parser$Parser$oneOf(
+			_List_fromArray(
+				[
+					A2(
+					$elm$parser$Parser$keeper,
+					A2(
+						$elm$parser$Parser$keeper,
+						A2(
+							$elm$parser$Parser$keeper,
+							A2(
+								$elm$parser$Parser$keeper,
+								A2(
+									$elm$parser$Parser$keeper,
+									A2(
+										$elm$parser$Parser$ignorer,
+										$elm$parser$Parser$succeed(
+											$rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts(datePart)),
+										$elm$parser$Parser$symbol('T')),
+									$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+								$elm$parser$Parser$oneOf(
+									_List_fromArray(
+										[
+											A2(
+											$elm$parser$Parser$keeper,
+											A2(
+												$elm$parser$Parser$ignorer,
+												$elm$parser$Parser$succeed($elm$core$Basics$identity),
+												$elm$parser$Parser$symbol(':')),
+											$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+											$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)
+										]))),
+							$elm$parser$Parser$oneOf(
+								_List_fromArray(
+									[
+										A2(
+										$elm$parser$Parser$keeper,
+										A2(
+											$elm$parser$Parser$ignorer,
+											$elm$parser$Parser$succeed($elm$core$Basics$identity),
+											$elm$parser$Parser$symbol(':')),
+										$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+										$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2),
+										$elm$parser$Parser$succeed(0)
+									]))),
+						$elm$parser$Parser$oneOf(
+							_List_fromArray(
+								[
+									A2(
+									$elm$parser$Parser$keeper,
+									A2(
+										$elm$parser$Parser$ignorer,
+										$elm$parser$Parser$succeed($elm$core$Basics$identity),
+										$elm$parser$Parser$symbol('.')),
+									$rtfeldman$elm_iso8601_date_strings$Iso8601$fractionsOfASecondInMs),
+									$elm$parser$Parser$succeed(0)
+								]))),
+					A2($elm$parser$Parser$ignorer, $rtfeldman$elm_iso8601_date_strings$Iso8601$utcOffsetInMinutes, $elm$parser$Parser$end)),
+					A2(
+					$elm$parser$Parser$ignorer,
+					$elm$parser$Parser$succeed(
+						A6($rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts, datePart, 0, 0, 0, 0, 0)),
+					$elm$parser$Parser$end)
+				]));
+	},
+	$rtfeldman$elm_iso8601_date_strings$Iso8601$monthYearDayInMs);
+var $elm$parser$Parser$DeadEnd = F3(
+	function (row, col, problem) {
+		return {col: col, problem: problem, row: row};
+	});
+var $elm$parser$Parser$problemToDeadEnd = function (p) {
+	return A3($elm$parser$Parser$DeadEnd, p.row, p.col, p.problem);
+};
+var $elm$parser$Parser$Advanced$bagToList = F2(
+	function (bag, list) {
+		bagToList:
+		while (true) {
+			switch (bag.$) {
+				case 'Empty':
+					return list;
+				case 'AddRight':
+					var bag1 = bag.a;
+					var x = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2($elm$core$List$cons, x, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+				default:
+					var bag1 = bag.a;
+					var bag2 = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2($elm$parser$Parser$Advanced$bagToList, bag2, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$run = F2(
+	function (_v0, src) {
+		var parse = _v0.a;
+		var _v1 = parse(
+			{col: 1, context: _List_Nil, indent: 1, offset: 0, row: 1, src: src});
+		if (_v1.$ === 'Good') {
+			var value = _v1.b;
+			return $elm$core$Result$Ok(value);
+		} else {
+			var bag = _v1.b;
+			return $elm$core$Result$Err(
+				A2($elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
+		}
+	});
+var $elm$parser$Parser$run = F2(
+	function (parser, source) {
+		var _v0 = A2($elm$parser$Parser$Advanced$run, parser, source);
+		if (_v0.$ === 'Ok') {
+			var a = _v0.a;
+			return $elm$core$Result$Ok(a);
+		} else {
+			var problems = _v0.a;
+			return $elm$core$Result$Err(
+				A2($elm$core$List$map, $elm$parser$Parser$problemToDeadEnd, problems));
+		}
+	});
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime = function (str) {
+	return A2($elm$parser$Parser$run, $rtfeldman$elm_iso8601_date_strings$Iso8601$iso8601, str);
+};
+var $elm_community$json_extra$Json$Decode$Extra$datetime = A2(
+	$elm$json$Json$Decode$andThen,
+	function (dateString) {
+		var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(dateString);
+		if (_v0.$ === 'Ok') {
+			var v = _v0.a;
+			return $elm$json$Json$Decode$succeed(v);
+		} else {
+			return $elm$json$Json$Decode$fail('Expecting an ISO-8601 formatted date+time string');
+		}
+	},
+	$elm$json$Json$Decode$string);
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$map5 = _Json_map5;
+var $author$project$DecodeAster$astDecoder = A6(
+	$elm$json$Json$Decode$map5,
+	$author$project$DecodeAster$Asters,
+	A2($elm$json$Json$Decode$field, 'src', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'dcontext', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'billsec', $elm$json$Json$Decode$int),
+	A2($elm$json$Json$Decode$field, 'disposition', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'calldate', $elm_community$json_extra$Json$Decode$Extra$datetime));
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
@@ -6111,70 +7076,41 @@ var $elm$http$Http$get = function (r) {
 		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
 var $elm$json$Json$Decode$list = _Json_decodeList;
-var $author$project$DecodeSelfTrue$Todos = F3(
-	function (id, done, task) {
-		return {done: done, id: id, task: task};
-	});
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
-	function (key, valDecoder, decoder) {
-		return A2(
-			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
-			A2($elm$json$Json$Decode$field, key, valDecoder),
-			decoder);
-	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$DecodeSelfTrue$todosDecoder = A3(
-	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'task',
-	$elm$json$Json$Decode$string,
-	A3(
-		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'done',
-		$elm$json$Json$Decode$bool,
-		A3(
-			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'id',
-			$elm$json$Json$Decode$int,
-			$elm$json$Json$Decode$succeed($author$project$DecodeSelfTrue$Todos))));
-var $author$project$DecodeSelfTrue$getTodos = $elm$http$Http$get(
+var $author$project$DecodeAster$getAsters = $elm$http$Http$get(
 	{
 		expect: A2(
 			$elm$http$Http$expectJson,
-			$author$project$DecodeSelfTrue$GotTodos,
-			$elm$json$Json$Decode$list($author$project$DecodeSelfTrue$todosDecoder)),
-		url: 'http://localhost:3000/todos'
+			$author$project$DecodeAster$GotAsters,
+			$elm$json$Json$Decode$list($author$project$DecodeAster$astDecoder)),
+		url: 'http://81.163.255.13:8081/telephone/astercdr?select=src,dcontext,billsec,disposition,calldate'
 	});
-var $author$project$DecodeSelfTrue$init = function (_v0) {
-	return _Utils_Tuple2($author$project$DecodeSelfTrue$Loading, $author$project$DecodeSelfTrue$getTodos);
+var $author$project$DecodeAster$init = function (_v0) {
+	return _Utils_Tuple2($author$project$DecodeAster$Loading, $author$project$DecodeAster$getAsters);
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$DecodeSelfTrue$subscriptions = function (model) {
+var $author$project$DecodeAster$subscriptions = function (model) {
 	return $elm$core$Platform$Sub$none;
 };
-var $author$project$DecodeSelfTrue$Failure = {$: 'Failure'};
-var $author$project$DecodeSelfTrue$Success = function (a) {
+var $author$project$DecodeAster$Failure = {$: 'Failure'};
+var $author$project$DecodeAster$Success = function (a) {
 	return {$: 'Success', a: a};
 };
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$DecodeSelfTrue$update = F2(
+var $author$project$DecodeAster$update = F2(
 	function (msg, model) {
 		if (msg.$ === 'NextPleace') {
-			return _Utils_Tuple2($author$project$DecodeSelfTrue$Loading, $author$project$DecodeSelfTrue$getTodos);
+			return _Utils_Tuple2($author$project$DecodeAster$Loading, $author$project$DecodeAster$getAsters);
 		} else {
 			var result = msg.a;
 			if (result.$ === 'Ok') {
 				var url = result.a;
 				return _Utils_Tuple2(
-					$author$project$DecodeSelfTrue$Success(url),
+					$author$project$DecodeAster$Success(url),
 					$elm$core$Platform$Cmd$none);
 			} else {
-				return _Utils_Tuple2($author$project$DecodeSelfTrue$Failure, $elm$core$Platform$Cmd$none);
+				return _Utils_Tuple2($author$project$DecodeAster$Failure, $elm$core$Platform$Cmd$none);
 			}
 		}
 	});
@@ -6182,7 +7118,7 @@ var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$DecodeSelfTrue$NextPleace = {$: 'NextPleace'};
+var $author$project$DecodeAster$NextPleace = {$: 'NextPleace'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
@@ -6203,30 +7139,249 @@ var $elm$html$Html$Events$onClick = function (msg) {
 };
 var $elm$html$Html$h3 = _VirtualDom_node('h3');
 var $elm$html$Html$table = _VirtualDom_node('table');
-var $elm$html$Html$th = _VirtualDom_node('th');
-var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$DecodeSelfTrue$viewTableHeader = A2(
-	$elm$html$Html$tr,
-	_List_Nil,
-	_List_fromArray(
-		[
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromMonth = function (month) {
+	switch (month.$) {
+		case 'Jan':
+			return 1;
+		case 'Feb':
+			return 2;
+		case 'Mar':
+			return 3;
+		case 'Apr':
+			return 4;
+		case 'May':
+			return 5;
+		case 'Jun':
+			return 6;
+		case 'Jul':
+			return 7;
+		case 'Aug':
+			return 8;
+		case 'Sep':
+			return 9;
+		case 'Oct':
+			return 10;
+		case 'Nov':
+			return 11;
+		default:
+			return 12;
+	}
+};
+var $elm$time$Time$flooredDiv = F2(
+	function (numerator, denominator) {
+		return $elm$core$Basics$floor(numerator / denominator);
+	});
+var $elm$time$Time$posixToMillis = function (_v0) {
+	var millis = _v0.a;
+	return millis;
+};
+var $elm$time$Time$toAdjustedMinutesHelp = F3(
+	function (defaultOffset, posixMinutes, eras) {
+		toAdjustedMinutesHelp:
+		while (true) {
+			if (!eras.b) {
+				return posixMinutes + defaultOffset;
+			} else {
+				var era = eras.a;
+				var olderEras = eras.b;
+				if (_Utils_cmp(era.start, posixMinutes) < 0) {
+					return posixMinutes + era.offset;
+				} else {
+					var $temp$defaultOffset = defaultOffset,
+						$temp$posixMinutes = posixMinutes,
+						$temp$eras = olderEras;
+					defaultOffset = $temp$defaultOffset;
+					posixMinutes = $temp$posixMinutes;
+					eras = $temp$eras;
+					continue toAdjustedMinutesHelp;
+				}
+			}
+		}
+	});
+var $elm$time$Time$toAdjustedMinutes = F2(
+	function (_v0, time) {
+		var defaultOffset = _v0.a;
+		var eras = _v0.b;
+		return A3(
+			$elm$time$Time$toAdjustedMinutesHelp,
+			defaultOffset,
 			A2(
-			$elm$html$Html$th,
-			_List_Nil,
-			_List_fromArray(
-				[
-					$elm$html$Html$text('ID')
-				])),
+				$elm$time$Time$flooredDiv,
+				$elm$time$Time$posixToMillis(time),
+				60000),
+			eras);
+	});
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$time$Time$toCivil = function (minutes) {
+	var rawDay = A2($elm$time$Time$flooredDiv, minutes, 60 * 24) + 719468;
+	var era = (((rawDay >= 0) ? rawDay : (rawDay - 146096)) / 146097) | 0;
+	var dayOfEra = rawDay - (era * 146097);
+	var yearOfEra = ((((dayOfEra - ((dayOfEra / 1460) | 0)) + ((dayOfEra / 36524) | 0)) - ((dayOfEra / 146096) | 0)) / 365) | 0;
+	var dayOfYear = dayOfEra - (((365 * yearOfEra) + ((yearOfEra / 4) | 0)) - ((yearOfEra / 100) | 0));
+	var mp = (((5 * dayOfYear) + 2) / 153) | 0;
+	var month = mp + ((mp < 10) ? 3 : (-9));
+	var year = yearOfEra + (era * 400);
+	return {
+		day: (dayOfYear - ((((153 * mp) + 2) / 5) | 0)) + 1,
+		month: month,
+		year: year + ((month <= 2) ? 1 : 0)
+	};
+};
+var $elm$time$Time$toDay = F2(
+	function (zone, time) {
+		return $elm$time$Time$toCivil(
+			A2($elm$time$Time$toAdjustedMinutes, zone, time)).day;
+	});
+var $elm$time$Time$toHour = F2(
+	function (zone, time) {
+		return A2(
+			$elm$core$Basics$modBy,
+			24,
 			A2(
-			$elm$html$Html$th,
-			_List_Nil,
-			_List_fromArray(
-				[
-					$elm$html$Html$text('task')
-				]))
-		]));
+				$elm$time$Time$flooredDiv,
+				A2($elm$time$Time$toAdjustedMinutes, zone, time),
+				60));
+	});
+var $elm$time$Time$toMillis = F2(
+	function (_v0, time) {
+		return A2(
+			$elm$core$Basics$modBy,
+			1000,
+			$elm$time$Time$posixToMillis(time));
+	});
+var $elm$time$Time$toMinute = F2(
+	function (zone, time) {
+		return A2(
+			$elm$core$Basics$modBy,
+			60,
+			A2($elm$time$Time$toAdjustedMinutes, zone, time));
+	});
+var $elm$time$Time$Apr = {$: 'Apr'};
+var $elm$time$Time$Aug = {$: 'Aug'};
+var $elm$time$Time$Dec = {$: 'Dec'};
+var $elm$time$Time$Feb = {$: 'Feb'};
+var $elm$time$Time$Jan = {$: 'Jan'};
+var $elm$time$Time$Jul = {$: 'Jul'};
+var $elm$time$Time$Jun = {$: 'Jun'};
+var $elm$time$Time$Mar = {$: 'Mar'};
+var $elm$time$Time$May = {$: 'May'};
+var $elm$time$Time$Nov = {$: 'Nov'};
+var $elm$time$Time$Oct = {$: 'Oct'};
+var $elm$time$Time$Sep = {$: 'Sep'};
+var $elm$time$Time$toMonth = F2(
+	function (zone, time) {
+		var _v0 = $elm$time$Time$toCivil(
+			A2($elm$time$Time$toAdjustedMinutes, zone, time)).month;
+		switch (_v0) {
+			case 1:
+				return $elm$time$Time$Jan;
+			case 2:
+				return $elm$time$Time$Feb;
+			case 3:
+				return $elm$time$Time$Mar;
+			case 4:
+				return $elm$time$Time$Apr;
+			case 5:
+				return $elm$time$Time$May;
+			case 6:
+				return $elm$time$Time$Jun;
+			case 7:
+				return $elm$time$Time$Jul;
+			case 8:
+				return $elm$time$Time$Aug;
+			case 9:
+				return $elm$time$Time$Sep;
+			case 10:
+				return $elm$time$Time$Oct;
+			case 11:
+				return $elm$time$Time$Nov;
+			default:
+				return $elm$time$Time$Dec;
+		}
+	});
+var $elm$core$String$cons = _String_cons;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
+};
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
+var $elm$core$String$repeatHelp = F3(
+	function (n, chunk, result) {
+		return (n <= 0) ? result : A3(
+			$elm$core$String$repeatHelp,
+			n >> 1,
+			_Utils_ap(chunk, chunk),
+			(!(n & 1)) ? result : _Utils_ap(result, chunk));
+	});
+var $elm$core$String$repeat = F2(
+	function (n, chunk) {
+		return A3($elm$core$String$repeatHelp, n, chunk, '');
+	});
+var $elm$core$String$padLeft = F3(
+	function (n, _char, string) {
+		return _Utils_ap(
+			A2(
+				$elm$core$String$repeat,
+				n - $elm$core$String$length(string),
+				$elm$core$String$fromChar(_char)),
+			string);
+	});
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$toPaddedString = F2(
+	function (digits, time) {
+		return A3(
+			$elm$core$String$padLeft,
+			digits,
+			_Utils_chr('0'),
+			$elm$core$String$fromInt(time));
+	});
+var $elm$time$Time$toSecond = F2(
+	function (_v0, time) {
+		return A2(
+			$elm$core$Basics$modBy,
+			60,
+			A2(
+				$elm$time$Time$flooredDiv,
+				$elm$time$Time$posixToMillis(time),
+				1000));
+	});
+var $elm$time$Time$toYear = F2(
+	function (zone, time) {
+		return $elm$time$Time$toCivil(
+			A2($elm$time$Time$toAdjustedMinutes, zone, time)).year;
+	});
+var $elm$time$Time$Zone = F2(
+	function (a, b) {
+		return {$: 'Zone', a: a, b: b};
+	});
+var $elm$time$Time$utc = A2($elm$time$Time$Zone, 0, _List_Nil);
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime = function (time) {
+	return A2(
+		$rtfeldman$elm_iso8601_date_strings$Iso8601$toPaddedString,
+		4,
+		A2($elm$time$Time$toYear, $elm$time$Time$utc, time)) + ('-' + (A2(
+		$rtfeldman$elm_iso8601_date_strings$Iso8601$toPaddedString,
+		2,
+		$rtfeldman$elm_iso8601_date_strings$Iso8601$fromMonth(
+			A2($elm$time$Time$toMonth, $elm$time$Time$utc, time))) + ('-' + (A2(
+		$rtfeldman$elm_iso8601_date_strings$Iso8601$toPaddedString,
+		2,
+		A2($elm$time$Time$toDay, $elm$time$Time$utc, time)) + ('T' + (A2(
+		$rtfeldman$elm_iso8601_date_strings$Iso8601$toPaddedString,
+		2,
+		A2($elm$time$Time$toHour, $elm$time$Time$utc, time)) + (':' + (A2(
+		$rtfeldman$elm_iso8601_date_strings$Iso8601$toPaddedString,
+		2,
+		A2($elm$time$Time$toMinute, $elm$time$Time$utc, time)) + (':' + (A2(
+		$rtfeldman$elm_iso8601_date_strings$Iso8601$toPaddedString,
+		2,
+		A2($elm$time$Time$toSecond, $elm$time$Time$utc, time)) + ('.' + (A2(
+		$rtfeldman$elm_iso8601_date_strings$Iso8601$toPaddedString,
+		3,
+		A2($elm$time$Time$toMillis, $elm$time$Time$utc, time)) + 'Z'))))))))))));
+};
 var $elm$html$Html$td = _VirtualDom_node('td');
-var $author$project$DecodeSelfTrue$viewTodo = function (todos) {
+var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $author$project$DecodeAster$viewAster = function (asters) {
 	return A2(
 		$elm$html$Html$tr,
 		_List_Nil,
@@ -6237,19 +7392,83 @@ var $author$project$DecodeSelfTrue$viewTodo = function (todos) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text(
-						$elm$core$String$fromInt(todos.id))
+						$elm$html$Html$text(asters.src)
 					])),
 				A2(
 				$elm$html$Html$td,
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text(todos.task)
+						$elm$html$Html$text(asters.dcontext)
+					])),
+				A2(
+				$elm$html$Html$td,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						$elm$core$String$fromInt(asters.billsec))
+					])),
+				A2(
+				$elm$html$Html$td,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(asters.disposition)
+					])),
+				A2(
+				$elm$html$Html$td,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						$rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(asters.calldate))
 					]))
 			]));
 };
-var $author$project$DecodeSelfTrue$viewTodos = function (todos) {
+var $elm$html$Html$th = _VirtualDom_node('th');
+var $author$project$DecodeAster$viewTableHeader = A2(
+	$elm$html$Html$tr,
+	_List_Nil,
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('номер')
+				])),
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('направление')
+				])),
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('время разговора')
+				])),
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('статус')
+				])),
+			A2(
+			$elm$html$Html$th,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('дата')
+				]))
+		]));
+var $author$project$DecodeAster$viewAsters = function (asters) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
@@ -6260,18 +7479,18 @@ var $author$project$DecodeSelfTrue$viewTodos = function (todos) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Todos')
+						$elm$html$Html$text('Звонки')
 					])),
 				A2(
 				$elm$html$Html$table,
 				_List_Nil,
 				_Utils_ap(
 					_List_fromArray(
-						[$author$project$DecodeSelfTrue$viewTableHeader]),
-					A2($elm$core$List$map, $author$project$DecodeSelfTrue$viewTodo, todos)))
+						[$author$project$DecodeAster$viewTableHeader]),
+					A2($elm$core$List$map, $author$project$DecodeAster$viewAster, asters)))
 			]));
 };
-var $author$project$DecodeSelfTrue$viewModel = function (model) {
+var $author$project$DecodeAster$viewModel = function (model) {
 	switch (model.$) {
 		case 'Failure':
 			return A2(
@@ -6279,20 +7498,20 @@ var $author$project$DecodeSelfTrue$viewModel = function (model) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text(' not load'),
+						$elm$html$Html$text('нет связи'),
 						A2(
 						$elm$html$Html$button,
 						_List_fromArray(
 							[
-								$elm$html$Html$Events$onClick($author$project$DecodeSelfTrue$NextPleace)
+								$elm$html$Html$Events$onClick($author$project$DecodeAster$NextPleace)
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Load Json Again')
+								$elm$html$Html$text('Получить список звонков')
 							]))
 					]));
 		case 'Loading':
-			return $elm$html$Html$text('Loading ...');
+			return $elm$html$Html$text('Получение ...');
 		default:
 			var dataUrl = model.a;
 			return A2(
@@ -6304,24 +7523,24 @@ var $author$project$DecodeSelfTrue$viewModel = function (model) {
 						$elm$html$Html$button,
 						_List_fromArray(
 							[
-								$elm$html$Html$Events$onClick($author$project$DecodeSelfTrue$NextPleace)
+								$elm$html$Html$Events$onClick($author$project$DecodeAster$NextPleace)
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Load comlete!')
+								$elm$html$Html$text('Список получен')
 							])),
 						A2(
 						$elm$html$Html$div,
 						_List_Nil,
 						_List_fromArray(
 							[
-								$elm$html$Html$text('json here ....')
+								$elm$html$Html$text('вывод списка')
 							])),
-						$author$project$DecodeSelfTrue$viewTodos(dataUrl)
+						$author$project$DecodeAster$viewAsters(dataUrl)
 					]));
 	}
 };
-var $author$project$DecodeSelfTrue$view = function (model) {
+var $author$project$DecodeAster$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
@@ -6332,544 +7551,12 @@ var $author$project$DecodeSelfTrue$view = function (model) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						$elm$html$Html$text('get todos')
+						$elm$html$Html$text('Звонки на сегодня')
 					])),
-				$author$project$DecodeSelfTrue$viewModel(model)
+				$author$project$DecodeAster$viewModel(model)
 			]));
 };
-var $author$project$DecodeSelfTrue$main = $elm$browser$Browser$element(
-	{init: $author$project$DecodeSelfTrue$init, subscriptions: $author$project$DecodeSelfTrue$subscriptions, update: $author$project$DecodeSelfTrue$update, view: $author$project$DecodeSelfTrue$view});
-_Platform_export({'DecodeSelfTrue':{'init':$author$project$DecodeSelfTrue$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});
-
-//////////////////// HMR BEGIN ////////////////////
-
-/*
-  MIT License http://www.opensource.org/licenses/mit-license.php
-  Original Author: Flux Xu @fluxxu
-*/
-
-/*
-    A note about the environment that this code runs in...
-
-    assumed globals:
-        - `module` (from Node.js module system and webpack)
-
-    assumed in scope after injection into the Elm IIFE:
-        - `scope` (has an 'Elm' property which contains the public Elm API)
-        - various functions defined by Elm which we have to hook such as `_Platform_initialize` and `_Scheduler_binding`
- */
-
-if (module.hot) {
-    (function () {
-        "use strict";
-
-        //polyfill for IE: https://github.com/fluxxu/elm-hot-loader/issues/16
-        if (typeof Object.assign != 'function') {
-            Object.assign = function (target) {
-                'use strict';
-                if (target == null) {
-                    throw new TypeError('Cannot convert undefined or null to object');
-                }
-
-                target = Object(target);
-                for (var index = 1; index < arguments.length; index++) {
-                    var source = arguments[index];
-                    if (source != null) {
-                        for (var key in source) {
-                            if (Object.prototype.hasOwnProperty.call(source, key)) {
-                                target[key] = source[key];
-                            }
-                        }
-                    }
-                }
-                return target;
-            };
-        }
-
-        // Elm 0.19.1 introduced a '$' prefix at the beginning of the symbols it emits,
-        // and we check for `Maybe.Just` because we expect it to be present in all Elm programs.
-        var elmVersion;
-        if (typeof elm$core$Maybe$Just !== 'undefined')
-            elmVersion = '0.19.0';
-        else if (typeof $elm$core$Maybe$Just !== 'undefined')
-            elmVersion = '0.19.1';
-        else
-            throw new Error("Could not determine Elm version");
-
-        function elmSymbol(symbol) {
-            try {
-                switch (elmVersion) {
-                    case '0.19.0':
-                        return eval(symbol);
-                    case '0.19.1':
-                        return eval('$' + symbol);
-                    default:
-                        throw new Error('Cannot resolve ' + symbol + '. Elm version unknown!')
-                }
-            } catch (e) {
-                if (e instanceof ReferenceError) {
-                    return undefined;
-                } else {
-                    throw e;
-                }
-            }
-        }
-
-        var instances = module.hot.data
-            ? module.hot.data.instances || {}
-            : {};
-        var uid = module.hot.data
-            ? module.hot.data.uid || 0
-            : 0;
-
-        if (Object.keys(instances).length === 0) {
-            log("[elm-hot] Enabled");
-        }
-
-        var cancellers = [];
-
-        // These 2 variables act as dynamically-scoped variables which are set only when the
-        // Elm module's hooked init function is called.
-        var initializingInstance = null;
-        var swappingInstance = null;
-
-        module.hot.accept();
-        module.hot.dispose(function (data) {
-            data.instances = instances;
-            data.uid = uid;
-
-            // Cleanup pending async tasks
-
-            // First, make sure that no new tasks can be started until we finish replacing the code
-            _Scheduler_binding = function () {
-                return _Scheduler_fail(new Error('[elm-hot] Inactive Elm instance.'))
-            };
-
-            // Second, kill pending tasks belonging to the old instance
-            if (cancellers.length) {
-                log('[elm-hot] Killing ' + cancellers.length + ' running processes...');
-                try {
-                    cancellers.forEach(function (cancel) {
-                        cancel();
-                    });
-                } catch (e) {
-                    console.warn('[elm-hot] Kill process error: ' + e.message);
-                }
-            }
-        });
-
-        function log(message) {
-            if (module.hot.verbose) {
-                console.log(message)
-            }
-        }
-
-        function getId() {
-            return ++uid;
-        }
-
-        function findPublicModules(parent, path) {
-            var modules = [];
-            for (var key in parent) {
-                var child = parent[key];
-                var currentPath = path ? path + '.' + key : key;
-                if ('init' in child) {
-                    modules.push({
-                        path: currentPath,
-                        module: child
-                    });
-                } else {
-                    modules = modules.concat(findPublicModules(child, currentPath));
-                }
-            }
-            return modules;
-        }
-
-        function registerInstance(domNode, flags, path, portSubscribes, portSends) {
-            var id = getId();
-
-            var instance = {
-                id: id,
-                path: path,
-                domNode: domNode,
-                flags: flags,
-                portSubscribes: portSubscribes,
-                portSends: portSends,
-                lastState: null // last Elm app state (root model)
-            };
-
-            return instances[id] = instance
-        }
-
-        function isFullscreenApp() {
-            // Returns true if the Elm app will take over the entire DOM body.
-            return typeof elmSymbol("elm$browser$Browser$application") !== 'undefined'
-                || typeof elmSymbol("elm$browser$Browser$document") !== 'undefined';
-        }
-
-        function wrapDomNode(node) {
-            // When embedding an Elm app into a specific DOM node, Elm will replace the provided
-            // DOM node with the Elm app's content. When the Elm app is compiled normally, the
-            // original DOM node is reused (its attributes and content changes, but the object
-            // in memory remains the same). But when compiled using `--debug`, Elm will completely
-            // destroy the original DOM node and instead replace it with 2 brand new nodes: one
-            // for your Elm app's content and the other for the Elm debugger UI. In this case,
-            // if you held a reference to the DOM node provided for embedding, it would be orphaned
-            // after Elm module initialization.
-            //
-            // So in order to make both cases consistent and isolate us from changes in how Elm
-            // does this, we will insert a dummy node to wrap the node for embedding and hold
-            // a reference to the dummy node.
-            //
-            // We will also put a tag on the dummy node so that the Elm developer knows who went
-            // behind their back and rudely put stuff in their DOM.
-            var dummyNode = document.createElement("div");
-            dummyNode.setAttribute("data-elm-hot", "true");
-            dummyNode.style.height = "inherit";
-            var parentNode = node.parentNode;
-            parentNode.replaceChild(dummyNode, node);
-            dummyNode.appendChild(node);
-            return dummyNode;
-        }
-
-        function wrapPublicModule(path, module) {
-            var originalInit = module.init;
-            if (originalInit) {
-                module.init = function (args) {
-                    var elm;
-                    var portSubscribes = {};
-                    var portSends = {};
-                    var domNode = null;
-                    var flags = null;
-                    if (typeof args !== 'undefined') {
-                        // normal case
-                        domNode = args['node'] && !isFullscreenApp()
-                            ? wrapDomNode(args['node'])
-                            : document.body;
-                        flags = args['flags'];
-                    } else {
-                        // rare case: Elm allows init to be called without any arguments at all
-                        domNode = document.body;
-                        flags = undefined
-                    }
-                    initializingInstance = registerInstance(domNode, flags, path, portSubscribes, portSends);
-                    elm = originalInit(args);
-                    wrapPorts(elm, portSubscribes, portSends);
-                    initializingInstance = null;
-                    return elm;
-                };
-            } else {
-                console.error("Could not find a public module to wrap at path " + path)
-            }
-        }
-
-        function swap(Elm, instance) {
-            log('[elm-hot] Hot-swapping module: ' + instance.path);
-
-            swappingInstance = instance;
-
-            // remove from the DOM everything that had been created by the old Elm app
-            var containerNode = instance.domNode;
-            while (containerNode.lastChild) {
-                containerNode.removeChild(containerNode.lastChild);
-            }
-
-            var m = getAt(instance.path.split('.'), Elm);
-            var elm;
-            if (m) {
-                // prepare to initialize the new Elm module
-                var args = {flags: instance.flags};
-                if (containerNode === document.body) {
-                    // fullscreen case: no additional args needed
-                } else {
-                    // embed case: provide a new node for Elm to use
-                    var nodeForEmbed = document.createElement("div");
-                    containerNode.appendChild(nodeForEmbed);
-                    args['node'] = nodeForEmbed;
-                }
-
-                elm = m.init(args);
-
-                Object.keys(instance.portSubscribes).forEach(function (portName) {
-                    if (portName in elm.ports && 'subscribe' in elm.ports[portName]) {
-                        var handlers = instance.portSubscribes[portName];
-                        if (!handlers.length) {
-                            return;
-                        }
-                        log('[elm-hot] Reconnect ' + handlers.length + ' handler(s) to port \''
-                            + portName + '\' (' + instance.path + ').');
-                        handlers.forEach(function (handler) {
-                            elm.ports[portName].subscribe(handler);
-                        });
-                    } else {
-                        delete instance.portSubscribes[portName];
-                        log('[elm-hot] Port was removed: ' + portName);
-                    }
-                });
-
-                Object.keys(instance.portSends).forEach(function (portName) {
-                    if (portName in elm.ports && 'send' in elm.ports[portName]) {
-                        log('[elm-hot] Replace old port send with the new send');
-                        instance.portSends[portName] = elm.ports[portName].send;
-                    } else {
-                        delete instance.portSends[portName];
-                        log('[elm-hot] Port was removed: ' + portName);
-                    }
-                });
-            } else {
-                log('[elm-hot] Module was removed: ' + instance.path);
-            }
-
-            swappingInstance = null;
-        }
-
-        function wrapPorts(elm, portSubscribes, portSends) {
-            var portNames = Object.keys(elm.ports || {});
-            //hook ports
-            if (portNames.length) {
-                // hook outgoing ports
-                portNames
-                    .filter(function (name) {
-                        return 'subscribe' in elm.ports[name];
-                    })
-                    .forEach(function (portName) {
-                        var port = elm.ports[portName];
-                        var subscribe = port.subscribe;
-                        var unsubscribe = port.unsubscribe;
-                        elm.ports[portName] = Object.assign(port, {
-                            subscribe: function (handler) {
-                                log('[elm-hot] ports.' + portName + '.subscribe called.');
-                                if (!portSubscribes[portName]) {
-                                    portSubscribes[portName] = [handler];
-                                } else {
-                                    //TODO handle subscribing to single handler more than once?
-                                    portSubscribes[portName].push(handler);
-                                }
-                                return subscribe.call(port, handler);
-                            },
-                            unsubscribe: function (handler) {
-                                log('[elm-hot] ports.' + portName + '.unsubscribe called.');
-                                var list = portSubscribes[portName];
-                                if (list && list.indexOf(handler) !== -1) {
-                                    list.splice(list.lastIndexOf(handler), 1);
-                                } else {
-                                    console.warn('[elm-hot] ports.' + portName + '.unsubscribe: handler not subscribed');
-                                }
-                                return unsubscribe.call(port, handler);
-                            }
-                        });
-                    });
-
-                // hook incoming ports
-                portNames
-                    .filter(function (name) {
-                        return 'send' in elm.ports[name];
-                    })
-                    .forEach(function (portName) {
-                        var port = elm.ports[portName];
-                        portSends[portName] = port.send;
-                        elm.ports[portName] = Object.assign(port, {
-                            send: function (val) {
-                                return portSends[portName].call(port, val);
-                            }
-                        });
-                    });
-            }
-            return portSubscribes;
-        }
-
-        /*
-        Breadth-first search for a `Browser.Navigation.Key` in the user's app model.
-        Returns the key and keypath or null if not found.
-        */
-        function findNavKey(rootModel) {
-            var queue = [];
-            if (isDebuggerModel(rootModel)) {
-                /*
-                 Extract the user's app model from the Elm Debugger's model. The Elm debugger
-                 can hold multiple references to the user's model (e.g. in its "history"). So
-                 we must be careful to only search within the "state" part of the Debugger.
-                */
-                queue.push({value: rootModel['state'], keypath: ['state']});
-            } else {
-                queue.push({value: rootModel, keypath: []});
-            }
-
-            while (queue.length !== 0) {
-                var item = queue.shift();
-
-                if (typeof item.value === "undefined" || item.value === null) {
-                    continue;
-                }
-
-                // The nav key is identified by a runtime tag added by the elm-hot injector.
-                if (item.value.hasOwnProperty("elm-hot-nav-key")) {
-                    // found it!
-                    return item;
-                }
-
-                if (typeof item.value !== "object") {
-                    continue;
-                }
-
-                for (var propName in item.value) {
-                    if (!item.value.hasOwnProperty(propName)) continue;
-                    var newKeypath = item.keypath.slice();
-                    newKeypath.push(propName);
-                    queue.push({value: item.value[propName], keypath: newKeypath})
-                }
-            }
-
-            return null;
-        }
-
-
-        function isDebuggerModel(model) {
-            // Up until elm/browser 1.0.2, the Elm debugger could be identified by a
-            // property named "expando". But in version 1.0.2 that was renamed to "expandoModel"
-            return model
-                && (model.hasOwnProperty("expando") || model.hasOwnProperty("expandoModel"))
-                && model.hasOwnProperty("state");
-        }
-
-        function getAt(keyPath, obj) {
-            return keyPath.reduce(function (xs, x) {
-                return (xs && xs[x]) ? xs[x] : null
-            }, obj)
-        }
-
-        function removeNavKeyListeners(navKey) {
-            window.removeEventListener('popstate', navKey.value);
-            window.navigator.userAgent.indexOf('Trident') < 0 || window.removeEventListener('hashchange', navKey.value);
-        }
-
-        // hook program creation
-        var initialize = _Platform_initialize;
-        _Platform_initialize = function (flagDecoder, args, init, update, subscriptions, stepperBuilder) {
-            var instance = initializingInstance || swappingInstance;
-            var tryFirstRender = !!swappingInstance;
-
-            var hookedInit = function (args) {
-                var initialStateTuple = init(args);
-                if (swappingInstance) {
-                    var oldModel = swappingInstance.lastState;
-                    var newModel = initialStateTuple.a;
-
-                    if (typeof elmSymbol("elm$browser$Browser$application") !== 'undefined') {
-                        var oldKeyLoc = findNavKey(oldModel);
-
-                        // attempt to find the Browser.Navigation.Key in the newly-constructed model
-                        // and bring it along with the rest of the old data.
-                        var newKeyLoc = findNavKey(newModel);
-                        var error = null;
-                        if (newKeyLoc === null) {
-                            error = "could not find Browser.Navigation.Key in the new app model";
-                        } else if (oldKeyLoc === null) {
-                            error = "could not find Browser.Navigation.Key in the old app model.";
-                        } else if (newKeyLoc.keypath.toString() !== oldKeyLoc.keypath.toString()) {
-                            error = "the location of the Browser.Navigation.Key in the model has changed.";
-                        } else {
-                            // remove event listeners attached to the old nav key
-                            removeNavKeyListeners(oldKeyLoc.value);
-
-                            // insert the new nav key into the old model in the exact same location
-                            var parentKeyPath = oldKeyLoc.keypath.slice(0, -1);
-                            var lastSegment = oldKeyLoc.keypath.slice(-1)[0];
-                            var oldParent = getAt(parentKeyPath, oldModel);
-                            oldParent[lastSegment] = newKeyLoc.value;
-                        }
-
-                        if (error !== null) {
-                            console.error("[elm-hot] Hot-swapping " + instance.path + " not possible: " + error);
-                            oldModel = newModel;
-                        }
-                    }
-
-                    // the heart of the app state hot-swap
-                    initialStateTuple.a = oldModel;
-
-                    // ignore any Cmds returned by the init during hot-swap
-                    initialStateTuple.b = elmSymbol("elm$core$Platform$Cmd$none");
-                } else {
-                    // capture the initial state for later
-                    initializingInstance.lastState = initialStateTuple.a;
-                }
-
-                return initialStateTuple
-            };
-
-            var hookedStepperBuilder = function (sendToApp, model) {
-                var result;
-                // first render may fail if shape of model changed too much
-                if (tryFirstRender) {
-                    tryFirstRender = false;
-                    try {
-                        result = stepperBuilder(sendToApp, model)
-                    } catch (e) {
-                        throw new Error('[elm-hot] Hot-swapping ' + instance.path +
-                            ' is not possible, please reload page. Error: ' + e.message)
-                    }
-                } else {
-                    result = stepperBuilder(sendToApp, model)
-                }
-
-                return function (nextModel, isSync) {
-                    if (instance) {
-                        // capture the state after every step so that later we can restore from it during a hot-swap
-                        instance.lastState = nextModel
-                    }
-                    return result(nextModel, isSync)
-                }
-            };
-
-            return initialize(flagDecoder, args, hookedInit, update, subscriptions, hookedStepperBuilder)
-        };
-
-        // hook process creation
-        var originalBinding = _Scheduler_binding;
-        _Scheduler_binding = function (originalCallback) {
-            return originalBinding(function () {
-                // start the scheduled process, which may return a cancellation function.
-                var cancel = originalCallback.apply(this, arguments);
-                if (cancel) {
-                    cancellers.push(cancel);
-                    return function () {
-                        cancellers.splice(cancellers.indexOf(cancel), 1);
-                        return cancel();
-                    };
-                }
-                return cancel;
-            });
-        };
-
-        scope['_elm_hot_loader_init'] = function (Elm) {
-            // swap instances
-            var removedInstances = [];
-            for (var id in instances) {
-                var instance = instances[id];
-                if (instance.domNode.parentNode) {
-                    swap(Elm, instance);
-                } else {
-                    removedInstances.push(id);
-                }
-            }
-
-            removedInstances.forEach(function (id) {
-                delete instance[id];
-            });
-
-            // wrap all public modules
-            var publicModules = findPublicModules(Elm);
-            publicModules.forEach(function (m) {
-                wrapPublicModule(m.path, m.module);
-            });
-        }
-    })();
-
-    scope['_elm_hot_loader_init'](scope['Elm']);
-}
-//////////////////// HMR END ////////////////////
-
-
-}(this));
+var $author$project$DecodeAster$main = $elm$browser$Browser$element(
+	{init: $author$project$DecodeAster$init, subscriptions: $author$project$DecodeAster$subscriptions, update: $author$project$DecodeAster$update, view: $author$project$DecodeAster$view});
+_Platform_export({'DecodeAster':{'init':$author$project$DecodeAster$main(
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));

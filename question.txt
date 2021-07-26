@@ -1,3 +1,3 @@
 http://localhost:3000/astercdr?select=src,dcontext,tstart&dcontext=like.weekend
-
-
+http://81.163.255.13:8081/astercdr?select=src,calldate&dcontext=not.ilike.*knglm*&billsec=gt.0
+http://81.163.255.13:8081/astercdr?select=src,calldate&dcontext=not.ilike.*knglm*&billsec=eq.0
